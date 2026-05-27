@@ -1,0 +1,1 @@
+export type TaskState = 'pending' | 'in_progress' | 'completed'
