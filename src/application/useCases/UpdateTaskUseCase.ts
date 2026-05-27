@@ -12,12 +12,17 @@ export function updateTaskUseCase(
 
     const descriptionError = getValidationErros('description', description);
     if(descriptionError){ return { success: false, error: descriptionError };}
-    
-    task.updateDetails(title, description)
-    
-    return {
-        success: true,
-        task
-    }
+    try{
+        const updateTask = task.updateDetails(title, description)
+         return { success: true, task: updateTask }
+
+    } catch(err: unknown){
+        return{
+      success: false,
+      error: err instanceof Error ? err.message : "An unexpected error occurred",
+        }
+    };
+
 }
+    
 
