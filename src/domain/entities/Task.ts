@@ -13,23 +13,24 @@ export class Task {
         description: string,
         date: Date,
         id?: string,
+        state?: TaskState,
+        completedTimer?: number
     ) {
-        this.id = (id)? id: crypto.randomUUID()
+        this.id = id ?? crypto.randomUUID()// ?? esto dice si exite el valor adelnate de mi lo uso si es undefine el de atras 
         this._title = title
         this._description = description
         this.date = date
-        this._state = "pending"
-        this._completedTimer = 0
+        this._state = state ?? "pending"
+        this._completedTimer = completedTimer ?? 0
     }
 
-    startTimer(): void {
-        if (this._state === "completed") return
-        this._state = "in_progress"
+    startTimer(): Task {
+        if (this._state === "completed") return this // sin no decimos que elemento del this llamamos este llama es el objeto completo 
+        return new Task ( this._title, this._description, this.date, this.id, 'in_progress', this._completedTimer  )
     }
 
-    stopTimer(seconds: number): void {
-        this._state ="completed"
-        this._completedTimer = seconds
+    stopTimer(seconds: number): Task {
+        return new Task ( this._title, this._description, this.date, this.id, 'completed', seconds  )
     }
 
 

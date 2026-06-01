@@ -13,16 +13,17 @@ export function toggleTimerUseCase( // toggle interruptor
     // actualizar la visat debgfl cliente 
 
 ): Task[] {
-     return tasks.map(task => {
-        if (task.id !== taskId) return task
+    return tasks.map(task => {
+       if (task.id !== taskId) return task
 
 
-        if(!isRunning && task.canStartTimer()){
-            task.startTimer()
-        }else if (isRunning){
-            task.stopTimer(currentSeconds)
-        }
+       if(isRunning && task.canStartTimer()){ 
+        return task.startTimer()}
+           
+       if (!isRunning && task.state === 'in_progress'){
+         return task.stopTimer(currentSeconds)}
 
-        return task 
-     })
+
+       return task 
+    })
 }

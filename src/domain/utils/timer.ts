@@ -1,4 +1,4 @@
-export function formaTime(seconds: number): string {
+export function formatTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
 
     // usamos % para sacar el resto de seconds asi descuntar el tiempo de la hora

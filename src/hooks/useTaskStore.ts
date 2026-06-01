@@ -26,7 +26,7 @@ interface UseTaskStoreReturn {
     toggleTime: (id: string, isRunning: boolean, currentSeconds: number) => void
     }
 //como este hook es donde centramos las tareas y todo en si  no neceasita parametro 
-export function UseTaskStore():UseTaskStoreReturn {
+export function useTaskStore():UseTaskStoreReturn {
     // creamos el array donde vamos a guardar las tasks
     const [tasks, setTasks] = useState<Task[]>([])
     
@@ -38,7 +38,7 @@ export function UseTaskStore():UseTaskStoreReturn {
             setTasks(prev => [...prev, result.task!])
         }
 
-        return {success: false, error: result.error}
+        return {success: result.success, error: result.error}
         },
     []);
 
@@ -48,24 +48,36 @@ export function UseTaskStore():UseTaskStoreReturn {
     }, []);
 
     const updateTask = useCallback((id: string, title: string, description: string)=>{
-        setTasks(prev =>{
-            const findTask = prev.find(task => task.id === id)
-            if(!findTask) return prev
+        let outcome: {success:boolean, error?: string } = {
+            success: false,
+            error: "jdkjk"
+        }
+        setTasks((prev):Task[]  => {
+        
+            const findTask = prev.find((t) => t.id === id)
+            if(!findTask) return prev ;// si no escuentra a false lansa el error 
+            
             const result = updateTaskUseCase(findTask, title, description)
-            if(result.success && result.task!){
-                return [...prev] // como nuestar clase si muta el objeto original nos toca forzar el render de ract devolviendo un nuevo array con los mismo datos del anterior 
-                // it is deuda tecnica de hace rinmutable
-            }
-            return prev
+            if(!result.success) return prev;
+
+            outcome = {success: true};
+             // aca le ponemos ! para decirle Ts que no es undefaul ya que en el resultado 
+            return prev.map((t) => (t.id === id?  result.task! : t) )
         })
-        return { success: true }
+        return outcome;
     },[])
+
+    const toggleTime = useCallback((id: string, isRunning: boolean, currentSeconds: number)=>{
+        setTasks(prev => toggleTimerUseCase(prev, id, isRunning, currentSeconds ) )
+    },[])
+
 
     return{
         tasks,
         createTask,
         deleteTask,
         updateTask,
+        toggleTime
     }
 }
     
