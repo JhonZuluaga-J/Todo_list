@@ -1,3 +1,5 @@
+"use client"
+
 //importamos los hooks de react como useState y useEffect
 // ya que este trabaja por estados y usamso estos para dacir este es el estado original 
 // esta es la acion que se ejecuta cuando el estado cambia
@@ -10,7 +12,7 @@
 //import { useState, useEffect } from "react";
 
 import {useEffect, useState } from 'react'
-import { formatTime } from "../domain/utils/timer"
+import { formatTime } from "@/domain/utils/timer"
 
 // esto aca es simple lo usamos para poder avisar de un cambio como tal sin tod sestos datos el objeto seria una caja vacia y react seria dificil decirle que cambio algo 
 // esto es como si quiere usar este hook puede si quires agregar ua funcion  con estos parametros 

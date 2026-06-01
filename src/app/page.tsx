@@ -1,11 +1,13 @@
+"use client"
+
 // now join to components in creat the page primar 
 //what I need?
-import {TaskForm} from './components/TaskForm'// the formt
-import {useTaskStore} from './hooks/useTaskStore'// crud the task 
-import {useTimers} from './hooks/useTimer'// the timer controls
+import {TaskForm} from '@/components/TaskForm'// the formt
+import {useTaskStore} from '@/hooks/useTaskStore'// crud the task 
+import {useTimers} from '@/hooks/useTimer'// the timer controls
 
 
-export default function App() {
+export default function HomePage () {
     const { tasks, createTask, deleteTask, toggleTime } = useTaskStore()
 
 
@@ -22,7 +24,7 @@ export default function App() {
             <h1 className="text-2xl font-extrabold mb-4" > Tareas </h1>
             <TaskForm onSubmit={createTask}/>
             
-            <ul className="mt-6 space-y-4 font-light">
+            <ul className="mt-6 space-y-4 font-light flex-3 ">
                 {tasks.map((task) => (
                     <li key={task.id} className="border p-4 rounded">
                         <h2>{task.title}</h2>

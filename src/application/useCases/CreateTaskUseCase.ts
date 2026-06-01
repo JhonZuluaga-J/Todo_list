@@ -1,6 +1,6 @@
-import { Task } from "../../domain/entities/Task";
-import { taskInputToDomain } from "../../schemas/dto/mapper";
-import type { TaskInput } from "../../schemas/dto/TaskDTO";
+import { Task } from "@/domain/entities/Task";
+import { taskInputToDomain } from "@/schemas/dto/mapper";
+import type { TaskInput } from "@/schemas/dto/TaskDTO";
 
 
 // Definimos una interfaz limpia para lo que devuelve nuestra función

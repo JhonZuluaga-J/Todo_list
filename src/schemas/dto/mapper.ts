@@ -1,4 +1,4 @@
-import { Task } from "../../domain/entities/Task";
+import { Task } from "@/domain/entities/Task";
 import type { TaskInput, TaskOutput } from "./TaskDTO";
 
 

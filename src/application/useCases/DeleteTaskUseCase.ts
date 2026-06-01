@@ -1,5 +1,5 @@
 
-import { Task } from "../../domain/entities/Task";
+import { Task } from "@/domain/entities/Task";
 
 export function deleteTaskUseCase(
     tasks: Task[],

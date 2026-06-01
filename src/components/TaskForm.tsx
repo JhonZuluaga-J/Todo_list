@@ -1,9 +1,9 @@
 'use client'
 
+import React, { useState } from 'react'
 
-import { useState, type SubmitEvent} from 'react'
-import type { TaskInput } from '../schemas/dto/TaskDTO'
-import { getValidationErros } from '../domain/utils/validation'
+import type { TaskInput } from '@/schemas/dto/TaskDTO'
+import { getValidationErros } from '@/domain/utils/validation'
 
 
 // como este es  el fomulario de tareas solo es preguntar unas cositas y ya ya nosotro tipos como deven deser esto datos que ingrezan
@@ -19,7 +19,7 @@ export function TaskForm ({ onSubmit }: TaskFormProps){
     const [error, setError] = useState<string |null>(null);
 
 
-    function handleSubmit(e: SubmitEvent){
+    const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault()// we use preventDefault to prevent the browser from reloading the page 
         const titleError = getValidationErros('title', title )
         const descriptionError = getValidationErros('description', description)
@@ -60,6 +60,7 @@ export function TaskForm ({ onSubmit }: TaskFormProps){
             ></input>
             <input
              value={date}
+             type="date"
              onChange={(e)=>setDate(e.target.value)}
              className="bg-mauve-800 border-2 border-cyan-600 rounded"
             ></input>

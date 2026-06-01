@@ -1,17 +1,19 @@
+"use client"
+
 import { useState, useCallback } from 'react'
 // importamos react useCallback para que cuando cmabia una cosa del componente react no carge un anueva insatncia de las funciones amenos que las dependencias de estas no cmabien}
 //comoa si es tipo use efect pero no ejecuta una funcion sino qu ela carga y le podemos dar una dependecia para decir esta funcio solo la vuelves a cargar cuando esta de pendecia cargue 
 // podria mos hacerlo con state que solo velva a cargara en ese momneto o que solo cargue una vez cuando el componente se creo 
 
-import { Task } from '../domain/entities/Task'
+import { Task } from '@/domain/entities/Task'
 // es la clase de nuestar tarea para que esto es una entindad la principal, porque asi task no es un objeto lineal (que te limita a seguri un camino establecido kajkajk)
 // esto es un entinda que tiene reglas entonces aplicamos un metodo de encapsulamiento y le damo metodos para que este objeto sea el uncio resposable de susu reglas y no dependa de nadie 
 
 
-import { createTaskUseCase, updateTaskUseCase, toggleTimerUseCase, deleteTaskUseCase } from '../application/useCases'
+import { createTaskUseCase, updateTaskUseCase, toggleTimerUseCase, deleteTaskUseCase } from '@/application/useCases'
 // esto useCases son casos de uso d ela app para no tener tod en un archivo regado separamos todos sus casos de uso 
 
-import type { TaskInput } from '../schemas/dto/TaskDTO'
+import type { TaskInput } from '@/schemas/dto/TaskDTO'
 // DTO  es algo llamado Data Transfer Object lo importan es trasportador de datos y ya paara que no entren direntamente a domain 
 
 //ahora aca vamos a desarrollar un hook necesitamos hacer una interfas que diga que devuelve 
@@ -50,16 +52,18 @@ export function useTaskStore():UseTaskStoreReturn {
     const updateTask = useCallback((id: string, title: string, description: string)=>{
         let outcome: {success:boolean, error?: string } = {
             success: false,
-            error: "jdkjk"
-        }
+            error: "Task not found",
+        };
         setTasks((prev):Task[]  => {
         
             const findTask = prev.find((t) => t.id === id)
             if(!findTask) return prev ;// si no escuentra a false lansa el error 
             
             const result = updateTaskUseCase(findTask, title, description)
-            if(!result.success) return prev;
-
+            if (!result.success) {
+                outcome = { success: false, error: result.error };
+                return prev;
+              }
             outcome = {success: true};
              // aca le ponemos ! para decirle Ts que no es undefaul ya que en el resultado 
             return prev.map((t) => (t.id === id?  result.task! : t) )

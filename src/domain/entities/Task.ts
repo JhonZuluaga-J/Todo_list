@@ -1,5 +1,5 @@
 
-import type { TaskState } from "../types/TaskState";
+import type { TaskState } from "@/domain/types/TaskState";
 
 export class Task {
     public readonly id: string

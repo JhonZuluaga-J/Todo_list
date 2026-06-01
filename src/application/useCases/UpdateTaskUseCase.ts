@@ -1,5 +1,5 @@
-import { Task } from "../../domain/entities/Task"
-import { getValidationErros } from "../../domain/utils/validation"
+import { Task } from "@/domain/entities/Task"
+import { getValidationErros } from "@/domain/utils/validation"
 
 export function updateTaskUseCase(
     task: Task,
