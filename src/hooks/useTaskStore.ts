@@ -1,98 +1,133 @@
 "use client"
 
-import { useState, useCallback } from 'react'
-// importamos react useCallback para que cuando cmabia una cosa del componente react no carge un anueva insatncia de las funciones amenos que las dependencias de estas no cmabien}
-//comoa si es tipo use efect pero no ejecuta una funcion sino qu ela carga y le podemos dar una dependecia para decir esta funcio solo la vuelves a cargar cuando esta de pendecia cargue 
-// podria mos hacerlo con state que solo velva a cargara en ese momneto o que solo cargue una vez cuando el componente se creo 
-
+import { useState, useCallback, useEffect } from 'react'
 import { Task } from '@/domain/entities/Task'
-// es la clase de nuestar tarea para que esto es una entindad la principal, porque asi task no es un objeto lineal (que te limita a seguri un camino establecido kajkajk)
-// esto es un entinda que tiene reglas entonces aplicamos un metodo de encapsulamiento y le damo metodos para que este objeto sea el uncio resposable de susu reglas y no dependa de nadie 
+import type { TaskInput, TaskOutput } from '@/schemas/dto/TaskDTO'
+import type { TaskState } from '@/domain/types/TaskState'
 
+// ─── Helper ───────────────────────────────────────────────────────────────────
+// Convierte el TaskOutput plano que devuelve la API en una instancia de Task
+// para que el dominio siga teniendo sus métodos (startTimer, updateDetails, etc.)
 
-import { createTaskUseCase, updateTaskUseCase, toggleTimerUseCase, deleteTaskUseCase } from '@/application/useCases'
-// esto useCases son casos de uso d ela app para no tener tod en un archivo regado separamos todos sus casos de uso 
+function outputToDomain(output: TaskOutput): Task {
+    return new Task(
+        output.title,
+        output.description,
+        new Date(output.date),
+        output.id,             // id: string — nunca undefined gracias al schema corregido
+        output.state as TaskState,
+        output.completedTimer
+    )
+}
 
-import type { TaskInput } from '@/schemas/dto/TaskDTO'
-// DTO  es algo llamado Data Transfer Object lo importan es trasportador de datos y ya paara que no entren direntamente a domain 
+// ─── Interface ────────────────────────────────────────────────────────────────
 
-//ahora aca vamos a desarrollar un hook necesitamos hacer una interfas que diga que devuelve 
-// primeor entendamo que este hook que creamos este e sdonde centra toda la funcionalidad de task y sus usecases entonces quermeo que sea una lista de objetos task 
-// que tenga los casos de uso y sus validaciones 
-//entonces dve devolver sus usus lo que es una funcion los parametros y lo que devuelve cada una 
 interface UseTaskStoreReturn {
-    tasks: Task[],
-    createTask: (input: TaskInput) => {success: boolean, error?: string},
-    deleteTask: (id: string) => void,
-    updateTask: (id: string, title: string, description: string) =>  {success: boolean, error?: string},
-    toggleTime: (id: string, isRunning: boolean, currentSeconds: number) => void
-    }
-//como este hook es donde centramos las tareas y todo en si  no neceasita parametro 
-export function useTaskStore():UseTaskStoreReturn {
-    // creamos el array donde vamos a guardar las tasks
-    const [tasks, setTasks] = useState<Task[]>([])
-    
-    const createTask = useCallback((Input: TaskInput) => {
-        const result = createTaskUseCase(Input);
+    tasks: Task[]
+    isLoading: boolean
+    createTask: (input: TaskInput) => Promise<{ success: boolean; error?: string }>
+    deleteTask: (id: string) => Promise<void>
+    updateTask: (id: string, title: string, description: string) => Promise<{ success: boolean; error?: string }>
+    toggleTime: (id: string, isRunning: boolean, currentSeconds: number) => Promise<void>
+}
 
-        // esto ! le dice no es undefaul entonces si no hay tarea, pues no ejecuta nada
-        if( result.success && result.task!){
-            setTasks(prev => [...prev, result.task!])
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useTaskStore(): UseTaskStoreReturn {
+    const [tasks, setTasks] = useState<Task[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    // Carga inicial — trae todas las tareas de MongoDB al montar
+    useEffect(() => {
+        async function loadTasks() {
+            try {
+                const res = await fetch('/api/tasks')
+                if (!res.ok) throw new Error('Failed to fetch tasks')
+                const data: TaskOutput[] = await res.json()
+                setTasks(data.map(outputToDomain))
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        loadTasks()
+    }, [])
+
+    const createTask = useCallback(async (
+        input: TaskInput
+    ): Promise<{ success: boolean; error?: string }> => {
+        const res = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+        })
+
+        if (!res.ok) {
+            const { error } = await res.json()
+            return { success: false, error: String(error) }
         }
 
-        return {success: result.success, error: result.error}
-        },
-    []);
+        const created: TaskOutput = await res.json()
+        setTasks(prev => [...prev, outputToDomain(created)])
+        return { success: true }
+    }, [])
 
-    
-    const deleteTask = useCallback((id: string)=>{
-        setTasks(prev => deleteTaskUseCase(prev,id))// aca no ponemos [] despues de la flecha por que nuestar funcion deleteusecases ya hace este trabajo de inmutabilidad devolver un array nuevo sin el elemento borrado
-    }, []);
+    const deleteTask = useCallback(async (id: string): Promise<void> => {
+        await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+        // Actualización optimista — quitamos la tarea de la UI sin esperar confirmación
+        setTasks(prev => prev.filter(t => t.id !== id))
+    }, [])
 
-    const updateTask = useCallback((id: string, title: string, description: string)=>{
-        let outcome: {success:boolean, error?: string } = {
-            success: false,
-            error: "Task not found",
-        };
-        setTasks((prev):Task[]  => {
-        
-            const findTask = prev.find((t) => t.id === id)
-            if(!findTask) return prev ;// si no escuentra a false lansa el error 
-            
-            const result = updateTaskUseCase(findTask, title, description)
-            if (!result.success) {
-                outcome = { success: false, error: result.error };
-                return prev;
-              }
-            outcome = {success: true};
-             // aca le ponemos ! para decirle Ts que no es undefaul ya que en el resultado 
-            return prev.map((t) => (t.id === id?  result.task! : t) )
+    const updateTask = useCallback(async (
+        id: string,
+        title: string,
+        description: string
+    ): Promise<{ success: boolean; error?: string }> => {
+        const res = await fetch(`/api/tasks/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'update', title, description }),
         })
-        return outcome;
-    },[])
 
-    const toggleTime = useCallback((id: string, isRunning: boolean, currentSeconds: number)=>{
-        setTasks(prev => toggleTimerUseCase(prev, id, isRunning, currentSeconds ) )
-    },[])
+        if (!res.ok) {
+            const { error } = await res.json()
+            return { success: false, error: String(error) }
+        }
 
+        const updated: TaskOutput = await res.json()
+        setTasks(prev => prev.map(t => (t.id === id ? outputToDomain(updated) : t)))
+        return { success: true }
+    }, [])
 
-    return{
-        tasks,
-        createTask,
-        deleteTask,
-        updateTask,
-        toggleTime
-    }
+    const toggleTime = useCallback(async (
+        id: string,
+        isRunning: boolean,
+        currentSeconds: number
+    ): Promise<void> => {
+        // Mandamos el estado completo de la tarea para que el servidor
+        // pueda reconstruir la instancia de dominio sin fetch extra
+        const task = tasks.find(t => t.id === id)
+        if (!task) return
+
+        const res = await fetch(`/api/tasks/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action:         'toggle',
+                isRunning,
+                currentSeconds,
+                currentState:   task.state,
+                title:          task.title,
+                description:    task.description,
+                date:           task.date,
+                completedTimer: task.completedTimer,
+            }),
+        })
+
+        if (!res.ok) return
+
+        const updated: TaskOutput = await res.json()
+        setTasks(prev => prev.map(t => (t.id === id ? outputToDomain(updated) : t)))
+    }, [tasks])
+
+    return { tasks, isLoading, createTask, deleteTask, updateTask, toggleTime }
 }
-    
-
-
-
-
-
-
-
-
-
-
-

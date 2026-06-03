@@ -23,6 +23,7 @@ export function TaskForm ({ onSubmit }: TaskFormProps){
         e.preventDefault()// we use preventDefault to prevent the browser from reloading the page 
         const titleError = getValidationErros('title', title )
         const descriptionError = getValidationErros('description', description)
+        
 
         if( titleError || descriptionError){
             setError(titleError ?? descriptionError)// utilizamos un operador cais tipo ternario llamdo nullish que dice si el priemer valso es null o udefaual uso el siguinete 

@@ -1,8 +1,10 @@
 import { z } from 'zod'
-import { TaskCardSchema, } from '@/types/Zod'
+import { TaskCardSchema, TaskInputSchema } from '@/types/Zod'
 
-// nececitamos establecer el schema de zod para los inpuds de afuera un shema compuesto unicamente de los datos que manda el usuario 
-export const TaskInputDTO = TaskCardSchema.omit({id:true, state: true, completedTimer: true});
-
-export type TaskOutput = z.infer<typeof TaskCardSchema>
+// Lo que el usuario manda al crear una tarea
+export const TaskInputDTO = TaskInputSchema
 export type TaskInput = z.infer<typeof TaskInputDTO>
+
+// Lo que la API devuelve — id siempre presente
+export const TaskOutputDTO = TaskCardSchema
+export type TaskOutput = z.infer<typeof TaskOutputDTO>
